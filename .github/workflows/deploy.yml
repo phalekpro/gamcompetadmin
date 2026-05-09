@@ -1,0 +1,42 @@
+name: Deploy Admin to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main   # Déclenche le déploiement à chaque push sur main
+
+permissions:
+  contents: write  # Nécessaire pour gh-pages
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Build du projet Vite
+        run: npm run build
+        env:
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Copier index.html en 404.html (routing HashRouter)
+        run: cp dist/index.html dist/404.html
+
+      - name: Déployer sur GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages

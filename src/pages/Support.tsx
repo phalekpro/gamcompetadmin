@@ -112,12 +112,8 @@ export default function Support() {
             toast.error('Erreur d\'envoi');
         }
 
-        // envoi de notification push + notification utilisateur
-        try {
-            await messagingService.notifyUser(selectedUser.userId, text);
-        } catch (notifErr) {
-            console.error('Erreur création notification support:', notifErr);
-        }
+        // Notification push désactivée côté admin (géré par les Cloud Functions)
+        console.log('Message envoyé à', selectedUser.userId);
     };
 
     const filteredSessions = sessions.filter(s =>

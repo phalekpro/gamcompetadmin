@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  // Base path pour GitHub Pages : https://phalekpro.github.io/gamcompetadmin/
+  base: '/gamcompetadmin/',
   plugins: [react()],
   server: {
     port: 3001,

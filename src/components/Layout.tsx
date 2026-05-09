@@ -15,10 +15,12 @@ import {
   Menu, 
   X, 
   Shield,
-  Bug
+  Bug,
+  Download
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NotificationBell from './NotificationBell';
+import toast from 'react-hot-toast';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -37,6 +39,41 @@ const navigation = [
 export default function Layout() {
   const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      // Update UI notify the user they can install the PWA
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      toast("L'application ne peut pas être installée. Elle l'est peut-être déjà ou votre navigateur ne le supporte pas.", { icon: 'ℹ️' });
+      return;
+    }
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    // We've used the prompt, and can't use it again, throw it away
+    setDeferredPrompt(null);
+  };
 
   const handleLogout = () => {
     logout();
@@ -107,6 +144,15 @@ export default function Layout() {
                 <p className="text-xs text-gray-500">GameCompet Admin</p>
               </div>
             </div>
+            
+            <button
+              onClick={handleInstallClick}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 mb-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Installer l'App
+            </button>
+            
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
